@@ -117,7 +117,7 @@ def draw_keypoints(image,required_angles):
 
             current_angle = calculate_angle_3d(pointA, pointB, pointC)
             joint_angle[joint] = current_angle
-            if (current_angle - required_angles[joint])>10:
+            if (current_angle - required_angles[joint])>30:
                 cv2.line(annotated_image, pointA[:2], pointB[:2], (0, 0, 255), 5)  # Joint in blue
                 cv2.line(annotated_image, pointB[:2], pointC[:2], (0, 0, 255), 5)
                 incorrect_joints.append(joint)
@@ -132,4 +132,5 @@ def draw_keypoints(image,required_angles):
             #               (pointB[0], pointB[1]), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
         if len(incorrect_joints)==0:
             matched_sequence= True
+            print("Match")
     return joint_angle, matched_sequence
