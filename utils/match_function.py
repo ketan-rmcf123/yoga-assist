@@ -2,7 +2,8 @@ import numpy as np
 import mediapipe as mp
 import streamlit as st 
 import cv2 
-
+from gtts import gTTS
+import tempfile
 
 @st.cache_resource
 def load_model():
@@ -26,9 +27,9 @@ def calculate_angle_3d(pointA, pointB, pointC):
     Returns:
         float: Directed angle in degrees between the three points (range -180 to +180).
     """
-    a = np.array(pointA)
-    b = np.array(pointB)
-    c = np.array(pointC)
+    a = np.array(pointA)[:3]
+    b = np.array(pointB)[:3]
+    c = np.array(pointC)[:3]
 
     # Calculate vectors BA and BC
     ba = a - b
@@ -57,6 +58,7 @@ def calculate_angle_3d(pointA, pointB, pointC):
 def draw_keypoints(image,required_angles):
     annotated_image = image
     joint_angle = dict()
+    #visibility = dict()
     matched_sequence = False
     # Process the image to find keypoints
     results = pose.process(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
@@ -65,7 +67,7 @@ def draw_keypoints(image,required_angles):
         # Get the pixel coordinates for each landmark
         h, w, _ = image.shape
         landmarks = results.pose_landmarks.landmark
-        keypoints = [(int(landmark.x * w), int(landmark.y * h), int(landmark.z)) for landmark in landmarks]
+        keypoints = [(int(landmark.x * w), int(landmark.y * h), int(landmark.z), landmark.visibility) for landmark in landmarks]
 
         # Define the key joint angles to calculate
         joint_angles = {
@@ -112,12 +114,18 @@ def draw_keypoints(image,required_angles):
         # Check each joint angle against the reference angle
         correct_joints = []
         incorrect_joints = []
+
         for joint, (pointA, pointB, pointC) in joint_angles.items():
             # Calculate the current angle
 
             current_angle = calculate_angle_3d(pointA, pointB, pointC)
+            #if joint not in visibility.keys():
+            #    visibility[joint] = []
+
+            #visibility[joint].append(filter_visibility((pointA, pointB, pointC)))
             joint_angle[joint] = current_angle
-            if (current_angle - required_angles[joint])>30:
+            #if len([x for x in visibility[joint] if x>=2]):
+            if (current_angle - required_angles[joint])>10:
                 cv2.line(annotated_image, pointA[:2], pointB[:2], (0, 0, 255), 5)  # Joint in blue
                 cv2.line(annotated_image, pointB[:2], pointC[:2], (0, 0, 255), 5)
                 incorrect_joints.append(joint)
@@ -125,12 +133,39 @@ def draw_keypoints(image,required_angles):
                 cv2.line(annotated_image, pointA[:2], pointB[:2], (0, 255, 0), 5)  # Joint in blue
                 cv2.line(annotated_image, pointB[:2], pointC[:2], (0, 255, 0), 5) 
                 correct_joints.append(joint)
+            #else:
+            #    pass
+                #print(f"Joint not visible {joint}")
 
-                
+        
+
             # Annotate the misplaced joint on the image
             #cv2.putText(annotated_image, f"{joint}: {current_angle:.1f}",
             #               (pointB[0], pointB[1]), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+        #print(visibility)
         if len(incorrect_joints)==0:
+            #if len([joint for joint,vcount in  visibility.items() if vcount >=2]) > 5:
             matched_sequence= True
-            print("Match")
+            print(f"Match {joint_angle,required_angles}")
+            speak_text("Match found")
+        else:
+            #print(f"Not a Match {joint_angle,required_angles,correct_joints,incorrect_joints }")
+            pass
     return joint_angle, matched_sequence
+
+def filter_visibility(visibility_params):
+    print(visibility_params)
+    return len([x for x in visibility_params if x[3]> 0.7])
+
+
+def speak_text(text_input):
+    tts = gTTS(text_input, lang="en")
+        
+    # Save audio to a temporary file
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as temp_audio_file:
+        tts.save(temp_audio_file.name)
+        temp_audio_path = temp_audio_file.name
+    
+    # Play audio in Streamlit
+
+    st.audio(temp_audio_path, format="audio/mp3")
