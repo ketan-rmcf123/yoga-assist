@@ -11,6 +11,7 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+from utils.match_function import load_model
 
 
 with st.sidebar:
@@ -22,3 +23,6 @@ with st.sidebar:
     st.page_link("pages/blank.py", label="Profile", icon="👤")
     st.page_link("pages/blank.py", label="Help Centre", icon="❓")
     
+
+with st.spinner("Loadding screen"):
+    mp_pose, pose,mp_drawing = load_model()

@@ -3,6 +3,8 @@ from datetime import datetime
 import streamlit as st
 import sqlite3
 import pandas as pd
+from typing import List, NamedTuple
+
 
 # Initialize database and create a table
 def init_db():
@@ -92,6 +94,20 @@ def fetch_data():
     conn.close()
     return df
 
+
+class MatchResult(NamedTuple):
+    uid:int
+    asana: int
+    status: str
+
+
+def write_to_queue(log_queue,uid,asana,status):
+    entry =  [ MatchResult(uid=uid,
+    asana= asana,
+    status=status,
+)]  
+    log_queue.put(entry)
+    return log_queue
 
 # Example usage
 #write_to_db("UID123", "Active", "Initial entry")

@@ -4,7 +4,7 @@ import streamlit as st
 import cv2 
 from gtts import gTTS
 import tempfile
-
+from collections import Counter
 @st.cache_resource
 def load_model():
     mp_pose = mp.solutions.pose
@@ -17,7 +17,7 @@ def load_model():
     mp_drawing = mp.solutions.drawing_utils
     return mp_pose,pose,mp_drawing
 
-mp_pose, pose,mp_drawing = load_model()
+mp_pose,pose,mp_drawing = load_model()
 
 def calculate_angle_3d(pointA, pointB, pointC):
     """
@@ -58,7 +58,7 @@ def calculate_angle_3d(pointA, pointB, pointC):
 def draw_keypoints(image,required_angles):
     annotated_image = image
     joint_angle = dict()
-    #visibility = dict()
+    visibility = dict()
     matched_sequence = False
     # Process the image to find keypoints
     results = pose.process(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
@@ -68,7 +68,7 @@ def draw_keypoints(image,required_angles):
         h, w, _ = image.shape
         landmarks = results.pose_landmarks.landmark
         keypoints = [(int(landmark.x * w), int(landmark.y * h), int(landmark.z), landmark.visibility) for landmark in landmarks]
-
+        visibility_values = [visibility_score[3] for visibility_score in keypoints]
         # Define the key joint angles to calculate
         joint_angles = {
             "left_elbow": (keypoints[mp_pose.PoseLandmark.LEFT_SHOULDER.value],
@@ -119,10 +119,8 @@ def draw_keypoints(image,required_angles):
             # Calculate the current angle
 
             current_angle = calculate_angle_3d(pointA, pointB, pointC)
-            #if joint not in visibility.keys():
-            #    visibility[joint] = []
 
-            #visibility[joint].append(filter_visibility((pointA, pointB, pointC)))
+            visibility[joint]=filter_visibility((pointA, pointB, pointC)) 
             joint_angle[joint] = current_angle
             #if len([x for x in visibility[joint] if x>=2]):
             if (current_angle - required_angles[joint])>10:
@@ -138,15 +136,16 @@ def draw_keypoints(image,required_angles):
                 #print(f"Joint not visible {joint}")
 
         
-
             # Annotate the misplaced joint on the image
             #cv2.putText(annotated_image, f"{joint}: {current_angle:.1f}",
             #               (pointB[0], pointB[1]), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+        #print("Distribution visibility")
         #print(visibility)
+        #print(f"{Counter(list(visibility.values()))}")
         if len(incorrect_joints)==0:
             #if len([joint for joint,vcount in  visibility.items() if vcount >=2]) > 5:
             matched_sequence= True
-            print(f"Match {joint_angle,required_angles}")
+            #print(f"Match {joint_angle,required_angles}")
             speak_text("Match found")
         else:
             #print(f"Not a Match {joint_angle,required_angles,correct_joints,incorrect_joints }")
@@ -154,8 +153,8 @@ def draw_keypoints(image,required_angles):
     return joint_angle, matched_sequence
 
 def filter_visibility(visibility_params):
-    print(visibility_params)
-    return len([x for x in visibility_params if x[3]> 0.7])
+    #print(visibility_params)
+    return len([x for x in visibility_params if x[3]> 0.5])
 
 
 def speak_text(text_input):
