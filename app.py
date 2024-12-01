@@ -1,5 +1,10 @@
 import streamlit as st
 import time
+import os
+os.environ["MEDIAPIPE_MODEL_COMPLEXITY"] = "0"  # Optional: Adjust model complexity
+os.environ["MEDIAPIPE_DATA_DIR"] = "/tmp/mediapipe"
+
+
 st.set_page_config(layout="wide")
 st.markdown(
     """
