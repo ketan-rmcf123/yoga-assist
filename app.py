@@ -1,8 +1,12 @@
 import streamlit as st
+import shutil
 import time
 import os
 os.environ["MEDIAPIPE_MODEL_COMPLEXITY"] = "0"  # Optional: Adjust model complexity
 os.environ["MEDIAPIPE_DATA_DIR"] = "/tmp/mediapipe"
+
+model_dir = "/tmp/mediapipe"
+os.makedirs(model_dir, exist_ok=True)
 
 
 st.set_page_config(layout="wide")
