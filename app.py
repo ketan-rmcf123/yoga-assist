@@ -7,7 +7,7 @@ os.environ["MEDIAPIPE_DATA_DIR"] = "/tmp/mediapipe"
 
 model_dir = "./mediapipe"
 os.makedirs(model_dir, exist_ok=True)
-os.environ["HOME"] = model_dir
+os.environ["XDG_CACHE_HOME"] = model_dir
 
 
 st.set_page_config(layout="wide")
