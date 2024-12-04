@@ -1,16 +1,25 @@
-"""A sample to configure MediaStreamConstraints object"""
-
 import streamlit as st
-from streamlit_webrtc import WebRtcMode, webrtc_streamer
+from streamlit_webrtc import webrtc_streamer, RTCConfiguration
 
-import logging
-import os
+# Configure WebRTC
+RTC_CONFIGURATION = RTCConfiguration({
+    "iceServers": [
+        {"urls": ["stun:stun.l.google.com:19302"]},  # Public STUN server
+    ]
+})
 
+# WebRTC callback (process frames if needed)
+def video_frame_callback(frame):
+    # Simply echo the frame back
+    return frame
+
+st.title("WebRTC Example on Streamlit Cloud")
+
+# Initialize WebRTC streamer
 webrtc_streamer(
-    key="media-constraints",
-    mode=WebRtcMode.SENDRECV,
-    rtc_configuration={  # Add this config
-        "iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]
-    }
+    key="example",
+    mode="SENDRECV",
+    rtc_configuration=RTC_CONFIGURATION,
+    media_stream_constraints={"video": True, "audio": False},
+    video_frame_callback=video_frame_callback,
 )
-st.write(f"WIP")
