@@ -4,7 +4,14 @@ import streamlit as st
 import sqlite3
 import pandas as pd
 from typing import List, NamedTuple
+import logging
+import os
 
+import streamlit as st
+from twilio.base.exceptions import TwilioRestException
+from twilio.rest import Client
+
+logger = logging.getLogger(__name__)
 
 # Initialize database and create a table
 def init_db():
@@ -94,21 +101,35 @@ def fetch_data():
     conn.close()
     return df
 
+def get_ice_servers():
+    """Use Twilio's TURN server because Streamlit Community Cloud has changed
+    its infrastructure and WebRTC connection cannot be established without TURN server now.  # noqa: E501
+    We considered Open Relay Project (https://www.metered.ca/tools/openrelay/) too,
+    but it is not stable and hardly works as some people reported like https://github.com/aiortc/aiortc/issues/832#issuecomment-1482420656  # noqa: E501
+    See https://github.com/whitphx/streamlit-webrtc/issues/1213
+    """
 
-class MatchResult(NamedTuple):
-    uid:int
-    asana: int
-    status: str
+    # Ref: https://www.twilio.com/docs/stun-turn/api
+    try:
+        account_sid = os.environ["TWILIO_ACCOUNT_SID"]
+        auth_token = os.environ["TWILIO_AUTH_TOKEN"]
+    except KeyError:
+        logger.warning(
+            "Twilio credentials are not set. Fallback to a free STUN server from Google."  # noqa: E501
+        )
+        return [{"urls": ["stun:stun.l.google.com:19302"]}]
 
+    client = Client(account_sid, auth_token)
 
-def write_to_queue(log_queue,uid,asana,status):
-    entry =  [ MatchResult(uid=uid,
-    asana= asana,
-    status=status,
-)]  
-    log_queue.put(entry)
-    return log_queue
+    try:
+        token = client.tokens.create()
+    except TwilioRestException as e:
+        st.warning(
+            f"Error occurred while accessing Twilio API. Fallback to a free STUN server from Google. ({e})"  # noqa: E501
+        )
+        return [{"urls": ["stun:stun.l.google.com:19302"]}]
 
+    return token.ice_servers
 # Example usage
 #write_to_db("UID123", "Active", "Initial entry")
 #write_to_db("UID124", "Inactive", "Test entry")

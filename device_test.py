@@ -5,6 +5,7 @@ from streamlit_webrtc import WebRtcMode, webrtc_streamer
 
 import logging
 import os
+from utils.db_utils import get_ice_servers
 
 # In your streamlit-webrtc component configuration
 webrtc_ctx = webrtc_streamer(
@@ -12,7 +13,7 @@ webrtc_ctx = webrtc_streamer(
     mode=WebRtcMode.SENDRECV,
     rtc_configuration={
         # Add STUN/TURN servers if needed
-        "iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]
+        "iceServers": get_ice_servers()
     },
     # Add proper media constraints
     media_stream_constraints={"video": True, "audio": True},
