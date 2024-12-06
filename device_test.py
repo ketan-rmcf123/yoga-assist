@@ -1,8 +1,9 @@
 """A sample to configure MediaStreamConstraints object"""
-
+import time
 import streamlit as st
 from streamlit_webrtc import WebRtcMode, webrtc_streamer
-
+from io import BytesIO
+from PIL import Image
 import logging
 import os
 from utils.db_utils import get_ice_servers
@@ -35,8 +36,11 @@ else:
 enable = st.checkbox("Enable camera")
 picture = st.camera_input("Take a picture", disabled=not enable)
 
-if picture:
-    st.image(picture)
+if picture is not None:
+    # Read image using Pillow
+    image = Image.open(BytesIO(picture.getvalue()))
+    time.sleep(2)
+    st.image(image, caption="Captured Image")
 
 
 
