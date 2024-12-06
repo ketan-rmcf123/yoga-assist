@@ -29,4 +29,14 @@ else:
     # Clean up resources when not playing
     # Ensure connections are properly closed
     pass
-st.write(f"WIP")
+
+
+
+enable = st.checkbox("Enable camera")
+picture = st.camera_input("Take a picture", disabled=not enable)
+
+if picture:
+    st.image(picture)
+
+
+
