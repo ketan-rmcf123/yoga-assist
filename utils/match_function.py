@@ -5,7 +5,8 @@ import cv2
 from gtts import gTTS
 import tempfile
 from collections import Counter
-@st.cache_resource
+
+#@st.cache_resource
 def load_model():
     mp_pose = mp.solutions.pose
     pose = mp_pose.Pose(
@@ -143,14 +144,13 @@ def draw_keypoints(image,required_angles):
         #print(visibility)
         #print(f"{Counter(list(visibility.values()))}")
         if len(incorrect_joints)==0:
-            #if len([joint for joint,vcount in  visibility.items() if vcount >=2]) > 5:
-            matched_sequence= True
-            #print(f"Match {joint_angle,required_angles}")
-            speak_text("Match found")
+            if len([joint for joint,vcount in  visibility.items() if vcount >=2]) >= 5:
+                matched_sequence= True
+                #print(f"Match {joint_angle,required_angles}")
         else:
             #print(f"Not a Match {joint_angle,required_angles,correct_joints,incorrect_joints }")
             pass
-    return joint_angle, matched_sequence
+    return joint_angle, matched_sequence, visibility
 
 def filter_visibility(visibility_params):
     #print(visibility_params)

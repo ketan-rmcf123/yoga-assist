@@ -1,7 +1,9 @@
 import streamlit as st
+import time
+import pandas as pd
 
 st.set_page_config(
-    page_title="Yoga Pose Validator",
+    page_title="Yoga Pose Daily Practice",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
@@ -21,6 +23,7 @@ from streamlit_webrtc import webrtc_streamer, VideoTransformerBase, WebRtcMode
 from configs.sn_config import stages as suryanamaskar_stages, EXPECTED_ANGLES as angles_config
 from utils.match_function import pose, draw_keypoints
 from utils.db_utils import MatchResult
+from utils.audio_utils import read_text
 from uuid import uuid4
 import queue,av
 
@@ -33,19 +36,23 @@ class MatchResult(NamedTuple):
     uid:int
     asana: int
     status: str
+    visibility: dict
+    current_angles: dict
 
 result_queue: "queue.Queue[List[MatchResult]]" = queue.Queue()
 
-def write_to_queue(uid,asana,status):
+def write_to_queue(uid,asana,status,visibility,current_angles):
     entry =  [ MatchResult(uid=uid,
     asana= asana,
     status=status,
+    visibility = visibility,
+    current_angles = current_angles
 )]  
     result_queue.put(entry)
     return result_queue
 
 frame_rate = 10
-def processor(uid,asana) -> av.VideoFrame:
+def asana_processor(uid,asana) -> av.VideoFrame:
     def video_frame_callback(frame: av.VideoFrame) -> av.VideoFrame:
         img = frame.to_ndarray(format="bgr24")
         try:
@@ -53,12 +60,12 @@ def processor(uid,asana) -> av.VideoFrame:
             
             if results.pose_landmarks:
                 # Draw landmarks and check if the pose matches
-                current_angles, match = draw_keypoints(img, angles_config[asana]["Angles"])
+                current_angles, match, visibility = draw_keypoints(img, angles_config[asana]["Angles"])
                 if match:
-                    write_to_queue(uid, asana, "Match Found")
+                    write_to_queue(uid, asana, "Match Found", visibility, current_angles)
                     #print(result_queue.qsize())
                 else:
-                    write_to_queue(uid, asana, "Match Not Found")
+                    write_to_queue(uid, asana, "Match Not Found", visibility, current_angles)
                     #print(result_queue.qsize())
             
             last_three = list(result_queue.queue)[-3:]
@@ -69,45 +76,25 @@ def processor(uid,asana) -> av.VideoFrame:
         return av.VideoFrame.from_ndarray(img, format="bgr24")
     return video_frame_callback
 
-
-class KeypointDetector(VideoTransformerBase):
-    def __init__(self,id,asana):
-        self.uid = id
-        self.asana = asana
-        write_to_queue(self.uid, self.asana, "Asana started")
-        print(result_queue.qsize())
-        print("Initialized KeypointDetector with asana:", self.asana)
-
-    def transform(self, frame):
+def sample_processor(uid,asana) -> av.VideoFrame:
+    def video_frame_callback(frame: av.VideoFrame) -> av.VideoFrame:
         img = frame.to_ndarray(format="bgr24")
         try:
             results = pose.process(img)
-            
-            if results.pose_landmarks:
-                # Draw landmarks and check if the pose matches
-                current_angles, match = draw_keypoints(img, angles_config[self.asana]["Angles"])
-                if match:
-                    write_to_queue(self.uid, self.asana, "Match Found")
-                    #print(result_queue.qsize())
-                else:
-                    write_to_queue(self.uid, self.asana, "Match Not Found")
-                    #print(result_queue.qsize())
-            
-            last_three = list(result_queue.queue)[-3:]
-            #print(last_three)
+
+            print(uid,asana,results)
         except Exception as e:
             print("Error in transform:", e)
 
-        return img
-
-
+        return av.VideoFrame.from_ndarray(img, format="bgr24")
+    return video_frame_callback
 
 
 # Initialize session state
 if "asana_index" not in st.session_state:
     st.session_state.asana_index = 0
 
-st.page_link("pages/blank.py", label="Back to Yogasana", icon=":material/arrow_back:")
+st.page_link("app.py", label="Back to Yogasana", icon=":material/arrow_back:")
 st.markdown(
     f"""
     <div class="full-height">
@@ -154,33 +141,45 @@ with col1:
     asana_placeholder = st.empty()
     asana_placeholder.markdown(f"### {st.session_state.asana_index} {suryanamaskar_stages[st.session_state.asana_index][1]}")
         
-    processor_callback = processor(st.session_state.uid, suryanamaskar_stages[st.session_state.asana_index][1])
+    processor_callback = sample_processor(st.session_state.uid, suryanamaskar_stages[st.session_state.asana_index][1])
     
     
     ctx = webrtc_streamer(key="asana_validator", 
                           video_frame_callback=processor_callback,
-                          media_stream_constraints={
-                                "video": {"frameRate": {"ideal": frame_rate}}, "audio": False},
                           mode=WebRtcMode.SENDRECV,
-#                          desired_playing_state=playing,
-                          async_processing=True,
+                          desired_playing_state=playing,
+#                          async_processing=True,
 
                         )
 with col2:
     if st.checkbox("Show the detected labels outside", value=False):
         labels_placeholder = st.empty()
+        audio_placeholder = st.empty()
+        status_placeholder = st.empty()
+        table_placeholder = st.empty()
         # NOTE: The video transformation with object detection and
         # this loop displaying the result labels are running
         # in different threads asynchronously.
         # Then the rendered video frames and the labels displayed here
         # are not strictly synchronized.
-        
+        audio_button = st.checkbox("Play Instructions",value=False)
         if ctx.state.playing:
             while True:
                 try:
                     result = result_queue.get()
-                    print(result)
                     labels_placeholder.table(result)
+                    
+                    if "Match" in result[0].status:
+                        status_placeholder.write(result[0])
+                        if audio_button:
+                            read_text(audio_placeholder,result[0].status)
+                            time.sleep(0.5)
+                        print(result[0].current_angles)
+                        df = pd.DataFrame.from_dict([result[0].visibility]).T
+                        df = df.reset_index(inplace=True)
+                        #df["angles"] = df.apply(lambda x: result[0].current_angles.get(x["index"]),axis=0)
+                        table_placeholder.table(df)
+
                 except Exception as e:
                     print(str(e))
 

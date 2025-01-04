@@ -107,7 +107,7 @@ def video_transformer_factory():
     return KeypointDetector(get_stage_callback=get_current_stage, progress_callback=update_progress_bar)
 
 
-st.page_link("pages/blank.py", label="Back to Yogasana", icon=":material/arrow_back:")
+st.page_link("app.py", label="Back to Yogasana", icon=":material/arrow_back:")
 st.markdown(
     f"""
     <div class="full-height">

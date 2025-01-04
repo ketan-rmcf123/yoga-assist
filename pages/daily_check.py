@@ -93,7 +93,7 @@ class KeypointDetector(VideoTransformerBase):
         img = frame.to_ndarray(format="bgr24")
         try:
             results = pose.process(img)
-            
+            print(results)
             if results.pose_landmarks:
                 # Draw landmarks and check if the pose matches
                 #print("Expected angles: ",self.asana, angles_config[self.asana]["Angles"])
@@ -123,7 +123,7 @@ def video_transformer_factory():
     return KeypointDetector(get_stage_callback=get_current_stage, progress_callback=update_progress_bar)
 
 
-st.page_link("pages/blank.py", label="Back to Yogasana", icon=":material/arrow_back:")
+st.page_link("app.py", label="Back to Yogasana", icon=":material/arrow_back:")
 st.markdown(
     f"""
     <div class="full-height">
@@ -199,4 +199,3 @@ def check_and_update_page():
         time.sleep(5)
         check_and_update_page()  
 
-check_and_update_page()

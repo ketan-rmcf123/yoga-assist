@@ -1,3 +1,5 @@
+import os
+
 stages ={
 0: [42, "Intro-Pranamasana"],
 1: [147, "Hasta Uttanasana"],
@@ -66,3 +68,26 @@ EXPECTED_ANGLES = {
     },
 
 }
+yoga_sessions = [
+    {
+        "title": "Suryanamaskar",
+        "summary": "Welcome to your personalized guide for Suryanamaskar.Let's flow through 10 energizing steps to kickstart your day!",
+        "image": os.getcwd() + "\\bin\suryanamaskar.jpg",
+        "streak": "8 Days",
+        "level": "Easy",
+    },
+    {
+        "title": "Restorative Flow",
+        "summary": "Welcome to your personalized guide for Restorative asanas.Unwind and recharge with this super relaxing sequence.",
+        "image": os.getcwd() +"\\bin\\restorative_flow.jpg",
+        "streak": "8 Days",
+        "level": "Easy",
+    },
+    {
+        "title": "Ashtanga Yoga",
+        "summary": "Welcome to your personalized guide for Ashtanga asanas.Dive into a powerful practice to build strength and feel amazing.",
+        "image": os.getcwd() + "\\bin\\ashtanga.jpeg",
+        "streak": "8 Days",
+        "level": "Advanced",
+    },
+]
