@@ -26,7 +26,7 @@ def initialize_session_state():
     if "pg_bar" not in st.session_state:
         st.session_state.pg_bar = st.progress(0)
     if "current_stage" not in st.session_state:
-        st.session_state.current_stage = 0
+        st.session_state.current_stage = 1
     if "asana_validation_button_clicked" not in st.session_state:
         st.session_state.asana_validation_button_clicked = False
     if "asana_validated" not in st.session_state:
@@ -111,7 +111,7 @@ st.page_link("app.py", label="Back to Yogasana", icon=":material/arrow_back:")
 st.markdown(
     f"""
     <div class="full-height">
-    <h4>Try Step by Step</h4>
+    <h6>Try Step by Step</h6>
     </div>
     """,
     unsafe_allow_html=True
@@ -126,14 +126,32 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-st.markdown("<hr style='border: 1px solid #f0f2f6;'>", unsafe_allow_html=True)
+#st.markdown("<hr style='border: 1px solid #f0f2f6;'>", unsafe_allow_html=True)
+# Custom CSS to fit pills in a single row
+st.markdown(
+    """
+    <style>
+    .stPills {
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+    }
+    .stPills div {
+        flex: 0 0 auto;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+selection = st.pills("Progress", asanas, selection_mode="multi")
 
 #def validate_asana():
     
 # Container in the first column
 print(f"Progress bar in main script : {st.session_state.pg_bar}")
 progress_bar = st.session_state.pg_bar
-col1, col2 = st.columns([6, 4])
+col1, col2 = st.columns([5, 5])
 
 with col1:
     text_placeholder = st.empty()
@@ -143,7 +161,7 @@ with col1:
     text_placeholder.markdown(
         f"""
         <div class="full-height">
-        <h6>{suryanamaskar_stages[st.session_state.current_stage][1]}</h6>
+        <h6>{str(st.session_state.current_stage+1) + " : " + suryanamaskar_stages[st.session_state.current_stage][1]}</h6>
         </div>
         """,
         unsafe_allow_html=True
@@ -151,23 +169,34 @@ with col1:
     youtube_url = "https://www.youtube.com/watch?app=desktop&v=BgdJzqfavHI"
     video_placeholder.video(
         f"{youtube_url}?autoplay=1&mute=1",
-        start_time=suryanamaskar_stages[st.session_state.current_stage][0]
+        start_time=suryanamaskar_stages[st.session_state.current_stage][0],
     )
 
 
 
 with col2:
-    ctx = webrtc_streamer(key="asana_validator", video_transformer_factory=video_transformer_factory)
     st.markdown(
         f"""
         <div class="full-height">
-        <h6>Motion guide</h6>
+        <h6>Motion Guide</h6>
         </div>
         """,
         unsafe_allow_html=True
     )
+    #ctx = webrtc_streamer(key="asana_validator", video_transformer_factory=video_transformer_factory)
+    #st.image("D:\Projects\yoga-assist\\bin\\aish\hasta_uttanasana.png",width =300)
+    video_file = open('D:\Projects\yoga-assist\\bin\\aish\\aish5.mp4', 'rb')
+    video_bytes = video_file.read()
+
+    st.video(video_bytes)
+
+on = st.toggle("Voice Guide :loud_sound:")
+
+if on:
+    st.text_area("","Pranamasana completed! \nHasta Uttanasana in progress.. \nStraighten your elbows.. \n ")
+
 # Monitoring loop to check and update UI when validation passes
-@st.fragment(run_every=10)
+#@st.fragment(run_every=10)
 def refresh_columns():
     if st.session_state.asana_validated:
         print("Updating UI")
@@ -184,13 +213,23 @@ def refresh_columns():
             )
             video_placeholder.video(
                 f"{youtube_url}?autoplay=1&mute=1",
-                start_time=suryanamaskar_stages[st.session_state.current_stage][0]
+                start_time=suryanamaskar_stages[st.session_state.current_stage][0],
             )
 
             # Reset validation flag and update progress bar
             st.session_state.asana_validated = False
             progress_bar.progress((st.session_state.current_stage + 1) / len(asanas))
         with col2:
-            show_validation_message()
+            st.markdown(
+                f"""
+                <div class="full-height">
+                <h9>Motion Guide</h9>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+            #ctx = webrtc_streamer(key="asana_validator", video_transformer_factory=video_transformer_factory)
+            st.image("D:\Projects\yoga-assist\\bin\\aish\hasta_uttanasana.png",use_container_width =True)
+
         time.sleep(0.1)  # Check every 0.1 seconds to avoid excessive CPU usage
 

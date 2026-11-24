@@ -1,7 +1,7 @@
 import os
 
 stages ={
-0: [42, "Intro-Pranamasana"],
+0: [42, "Pranamasana"],
 1: [147, "Hasta Uttanasana"],
 2: [185, "Hasta Padasana"],
 3: [220, "Ashwa Sanchalanasana"],
@@ -16,7 +16,7 @@ stages ={
 
 }
 EXPECTED_ANGLES = {
-   "Intro-Pranamasana" : {
+   "Pranamasana" : {
      "ID": 1,
     "Angles" : {'left_elbow': 150.104337566288, 'right_elbow': 150.54342950085257, 'left_shoulder': 30.454155973970376, 'right_shoulder': 30.20323775494265, 'left_hip': 180.4113514554364, 'right_hip': 180.43829466743296, 'left_knee': 180.31233834231756, 'right_knee': 180.54702507121294, 'left_ankle': 105.96790903265024, 'right_ankle': 105.66477562336291}
 
@@ -75,6 +75,27 @@ yoga_sessions = [
         "image": os.getcwd() + "\\bin\suryanamaskar.jpg",
         "streak": "8 Days",
         "level": "Easy",
+        "subpage": [
+            {
+        "title": "Get Familiar with the Routine",
+        "summary": "Meet our instructor Radha who will take you through the 12 steps of Hatha Yoga- Suryanamaskat.This step is needed for a first time user, to unlock the next!",
+        "image": os.getcwd() + "\\bin\suryanamaskar_familiar.png",
+        "page_link":"pages/find_your_flow.py",
+            },
+            {
+        "title": "Try Step by Step",
+        "summary": "You can try the same routine step by step here.Our Motion Guide will help you along the way through Voice Notes.",
+        "image": os.getcwd() + "\\bin\suryanamaskar_stepbystep.png",
+        "page_link":"pages/daily_practise.py",
+            },
+            {
+        "title": "Daily Practice",
+        "summary": "You can now practice the routine daily and get feedback on your form and posture.Your Motion Guide is always here to support you",
+        "image": os.getcwd() + "\\bin\suryanamaskar_daily_practise.png",
+        "page_link":"pages/daily_check.py",
+            }
+
+        ]
     },
     {
         "title": "Restorative Flow",

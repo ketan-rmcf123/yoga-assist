@@ -142,15 +142,13 @@ with col1:
     asana_placeholder.markdown(f"### {st.session_state.asana_index} {suryanamaskar_stages[st.session_state.asana_index][1]}")
         
     processor_callback = sample_processor(st.session_state.uid, suryanamaskar_stages[st.session_state.asana_index][1])
-    
-    
-    ctx = webrtc_streamer(key="asana_validator", 
-                          video_frame_callback=processor_callback,
-                          mode=WebRtcMode.SENDRECV,
-                          desired_playing_state=playing,
-#                          async_processing=True,
 
-                        )
+    youtube_url = "https://www.youtube.com/watch?app=desktop&v=BgdJzqfavHI"
+    st.video(
+        f"{youtube_url}?autoplay=1&mute=1",
+        start_time=30
+    )
+    
 with col2:
     if st.checkbox("Show the detected labels outside", value=False):
         labels_placeholder = st.empty()
